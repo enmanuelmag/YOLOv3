@@ -64,13 +64,13 @@ class CNNBlock(nn.Module):
   def __init__(self, in_chns, out_chns, bn=True, **kwargs):
     super().__init__()
     #bn is for batch normalization
-    self.conv = nn.Conv2d(in_chns, out_chns, bias=not bn,**kwargs).to(device)
-    self.bn = nn.BatchNorm2d(out_chns).to(device) if bn else None
-    self.leaky = nn.LeakyReLU(0.1).to(device)
+    self.conv = nn.Conv2d(in_chns, out_chns, bias=not bn,**kwargs)
+    self.bn = nn.BatchNorm2d(out_chns) if bn else None
+    self.leaky = nn.LeakyReLU(0.1)
     self.use_bn = bn
 
   def forward(self, x):
-    x = x.to(device)
+    x = x
     if self.use_bn:
       return self.leaky(self.bn(self.conv(x)))
     
@@ -87,8 +87,8 @@ class ResidualBlock(nn.Module):
     for _ in range(repeats):
       self.layers += [
         nn.Sequential(
-          CNNBlock(in_chns=chns, out_chns=chns//2, kernel_size=1).to(device),
-          CNNBlock(in_chns=chns//2, out_chns=chns, kernel_size=3, padding=1).to(device)
+          CNNBlock(in_chns=chns, out_chns=chns//2, kernel_size=1),
+          CNNBlock(in_chns=chns//2, out_chns=chns, kernel_size=3, padding=1)
         )
       ]
 
@@ -115,8 +115,8 @@ class ScalePrediction(nn.Module):
     """"""
     self.num_classes = num_classes
     self.pred = nn.Sequential(
-      CNNBlock(in_chns, 2 * in_chns, kernel_size=3, padding=1).to(device),
-      CNNBlock(2 * in_chns, 3 * (num_classes + 5), bn=False, kernel_size=1).to(device)
+      CNNBlock(in_chns, 2 * in_chns, kernel_size=3, padding=1),
+      CNNBlock(2 * in_chns, 3 * (num_classes + 5), bn=False, kernel_size=1)
     )
 
   def forward(self, x):
@@ -175,7 +175,7 @@ class YOLOv3(nn.Module):
             stride=stride,
             kernel_size=kernel_size,
             padding=1 if kernel_size == 3 else 0
-          ).to(device)
+          )
         )
         in_chans = out_chans
 
@@ -184,7 +184,7 @@ class YOLOv3(nn.Module):
         print(f'Creating {num_repeats} repeats of a {module[0]}')
 
         layers.append(
-          ResidualBlock(in_chans, repeats=num_repeats).to(device)
+          ResidualBlock(in_chans, repeats=num_repeats)
         )
 
       elif isinstance(module, str):
@@ -193,9 +193,9 @@ class YOLOv3(nn.Module):
           print(f'Creating {types.get("S")} branch numnber {skips_pred_num}')
           skips_pred_num += 1
           layers += [
-            ResidualBlock(in_chans, residual=False, repeats=1).to(device),
-            CNNBlock(in_chans, in_chans//2, kernel_size=1).to(device),
-            ScalePrediction(in_chans//2 , num_classes).to(device)
+            ResidualBlock(in_chans, residual=False, repeats=1),
+            CNNBlock(in_chans, in_chans//2, kernel_size=1),
+            ScalePrediction(in_chans//2 , num_classes)
           ]
           in_chans = in_chans // 2
 
@@ -203,7 +203,7 @@ class YOLOv3(nn.Module):
           print(f'Creating {types.get("U")} layer numnber {up_samples_num}')
           up_samples_num += 1
           layers.append(
-            nn.Upsample(scale_factor=2, mode='nearest').to(device),
+            nn.Upsample(scale_factor=2, mode='nearest'),
           )
           in_chans = in_chans * 3
     
@@ -214,8 +214,9 @@ if __name__ == "__main__":
   IMAGE_SIZE = 416
 
   model = YOLOv3(num_classes=num_classes)
-  model.to(device)
+  model
   x = torch.randn((2, 3, IMAGE_SIZE, IMAGE_SIZE))
+  x.to(device)
   out = model(x)
 
   assert model(x)[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
