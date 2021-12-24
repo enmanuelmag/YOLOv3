@@ -1,6 +1,17 @@
 import torch
 import torch.nn as nn
 
+if torch.cuda.is_available():
+  print('Using GPU')
+  torch.cuda.set_device(0)
+else:
+  print("CUDA is not available")
+
+if torch.cuda.is_available():  
+  dev = "cuda:0" 
+else:  
+  dev = "cpu"  
+device = torch.device(dev) 
 
 types = { 'U': 'UPSAMPLING', 'B': 'BLOCK_CONVS', 'S': 'SKIP_PREDICTIONS' }
 """
@@ -53,12 +64,13 @@ class CNNBlock(nn.Module):
   def __init__(self, in_chns, out_chns, bn=True, **kwargs):
     super().__init__()
     #bn is for batch normalization
-    self.conv = nn.Conv2d(in_chns, out_chns, bias=not bn,**kwargs)
-    self.bn = nn.BatchNorm2d(out_chns) if bn else None
-    self.leaky = nn.LeakyReLU(0.1)
+    self.conv = nn.Conv2d(in_chns, out_chns, bias=not bn,**kwargs).to(device)
+    self.bn = nn.BatchNorm2d(out_chns).to(device) if bn else None
+    self.leaky = nn.LeakyReLU(0.1).to(device)
     self.use_bn = bn
 
   def forward(self, x):
+    x = x.to(device)
     if self.use_bn:
       return self.leaky(self.bn(self.conv(x)))
     
@@ -75,8 +87,8 @@ class ResidualBlock(nn.Module):
     for _ in range(repeats):
       self.layers += [
         nn.Sequential(
-          CNNBlock(in_chns=chns, out_chns=chns//2, kernel_size=1),
-          CNNBlock(in_chns=chns//2, out_chns=chns, kernel_size=3, padding=1)
+          CNNBlock(in_chns=chns, out_chns=chns//2, kernel_size=1).to(device),
+          CNNBlock(in_chns=chns//2, out_chns=chns, kernel_size=3, padding=1).to(device)
         )
       ]
 
@@ -103,8 +115,8 @@ class ScalePrediction(nn.Module):
     """"""
     self.num_classes = num_classes
     self.pred = nn.Sequential(
-      CNNBlock(in_chns, 2 * in_chns, kernel_size=3, padding=1),
-      CNNBlock(2 * in_chns, 3 * (num_classes + 5), bn=False, kernel_size=1)
+      CNNBlock(in_chns, 2 * in_chns, kernel_size=3, padding=1).to(device),
+      CNNBlock(2 * in_chns, 3 * (num_classes + 5), bn=False, kernel_size=1).to(device)
     )
 
   def forward(self, x):
@@ -163,7 +175,7 @@ class YOLOv3(nn.Module):
             stride=stride,
             kernel_size=kernel_size,
             padding=1 if kernel_size == 3 else 0
-          )
+          ).to(device)
         )
         in_chans = out_chans
 
@@ -171,7 +183,9 @@ class YOLOv3(nn.Module):
         num_repeats = module[1]
         print(f'Creating {num_repeats} repeats of a {module[0]}')
 
-        layers.append(ResidualBlock(in_chans, repeats=num_repeats))
+        layers.append(
+          ResidualBlock(in_chans, repeats=num_repeats).to(device)
+        )
 
       elif isinstance(module, str):
 
@@ -179,9 +193,9 @@ class YOLOv3(nn.Module):
           print(f'Creating {types.get("S")} branch numnber {skips_pred_num}')
           skips_pred_num += 1
           layers += [
-            ResidualBlock(in_chans, residual=False, repeats=1),
-            CNNBlock(in_chans, in_chans//2, kernel_size=1),
-            ScalePrediction(in_chans//2 , num_classes)
+            ResidualBlock(in_chans, residual=False, repeats=1).to(device),
+            CNNBlock(in_chans, in_chans//2, kernel_size=1).to(device),
+            ScalePrediction(in_chans//2 , num_classes).to(device)
           ]
           in_chans = in_chans // 2
 
@@ -189,22 +203,23 @@ class YOLOv3(nn.Module):
           print(f'Creating {types.get("U")} layer numnber {up_samples_num}')
           up_samples_num += 1
           layers.append(
-            nn.Upsample(scale_factor=2, mode='nearest'),
+            nn.Upsample(scale_factor=2, mode='nearest').to(device),
           )
           in_chans = in_chans * 3
     
     return layers
 
 if __name__ == "__main__":
-    num_classes = 6
-    IMAGE_SIZE = 416
+  num_classes = 6
+  IMAGE_SIZE = 416
 
-    model = YOLOv3(num_classes=num_classes)
-    x = torch.randn((2, 3, IMAGE_SIZE, IMAGE_SIZE))
-    out = model(x)
+  model = YOLOv3(num_classes=num_classes)
+  model.to(device)
+  x = torch.randn((2, 3, IMAGE_SIZE, IMAGE_SIZE))
+  out = model(x)
 
-    assert model(x)[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
-    assert model(x)[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
-    assert model(x)[2].shape == (2, 3, IMAGE_SIZE//8, IMAGE_SIZE//8, num_classes + 5)
+  assert model(x)[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
+  assert model(x)[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
+  assert model(x)[2].shape == (2, 3, IMAGE_SIZE//8, IMAGE_SIZE//8, num_classes + 5)
 
-    print("Success!")
+  print("Success!")
