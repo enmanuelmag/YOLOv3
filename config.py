@@ -1,6 +1,6 @@
-import albumentations as A
 import cv2
 import torch
+import albumentations as A
 
 from albumentations.pytorch import ToTensorV2
 from utils import seed_everything

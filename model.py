@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.nn as nn
 
@@ -217,7 +218,9 @@ if __name__ == "__main__":
   model
   x = torch.randn((2, 3, IMAGE_SIZE, IMAGE_SIZE))
   x.to(device)
+  start = time.time()
   out = model(x)
+  print(f'Time: {time.time() - start}')
 
   assert model(x)[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
   assert model(x)[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
