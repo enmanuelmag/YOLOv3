@@ -1,9 +1,8 @@
 import cv2
 import torch
 import albumentations as A
-
-from albumentations.pytorch import ToTensorV2
 from utils import seed_everything
+from albumentations.pytorch import ToTensorV2
 
 DATASET = 'USD_DIVISA'
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"

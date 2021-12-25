@@ -2,11 +2,11 @@
 Creates a Pytorch dataset to load the Pascal VOC & MS COCO datasets
 """
 
+import os
+import torch
 import config
 import numpy as np
-import os
 import pandas as pd
-import torch
 
 from PIL import Image, ImageFile
 from torch.utils.data import Dataset, DataLoader
