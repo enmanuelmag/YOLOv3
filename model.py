@@ -2,13 +2,13 @@ import time
 import torch
 import torch.nn as nn
 
-if torch.cuda.is_available():
-  print('Using GPU')
-  torch.cuda.set_device(0)
-else:
-  print("CUDA is not available")
 
-if torch.cuda.is_available():  
+if torch.cuda.is_available() and False:
+  torch.cuda.empty_cache()
+  torch.cuda.set_device(0)
+
+
+if torch.cuda.is_available() and False:  
   dev = "cuda:0" 
 else:  
   dev = "cpu"  

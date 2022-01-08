@@ -43,6 +43,7 @@ class YOLODataset(Dataset):
         image = np.array(Image.open(img_path).convert("RGB"))
 
         if self.transform:
+            print('IMG:' + img_path)
             augmentations = self.transform(image=image, bboxes=bboxes)
             image = augmentations["image"]
             bboxes = augmentations["bboxes"]
@@ -85,9 +86,9 @@ def test():
     transform = config.test_transforms
 
     dataset = YOLODataset(
-        "COCO/train.csv",
-        "COCO/images/images/",
-        "COCO/labels/labels_new/",
+        "USD_DIVISA/train.csv",
+        "USD_DIVISA/images/",
+        "USD_DIVISA/labels/",
         S=[13, 26, 52],
         anchors=anchors,
         transform=transform,

@@ -222,6 +222,8 @@ def plot_image(image, boxes):
     cmap = plt.get_cmap("tab20b")
     class_labels = config.USD_DIVISA_CLASSES if config.DATASET=='USD_DIVISA' else config.COCO_LABELS
     colors = [cmap(i) for i in np.linspace(0, 1, len(class_labels))]
+    print(image)
+    print(image.shape)
     im = np.array(image)
     height, width, _ = im.shape
 

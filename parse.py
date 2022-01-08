@@ -11,7 +11,12 @@ def get_filenames(path):
         path.replace('labels', 'images'),
         filename.replace('txt', 'png')
       ))
-      filenames.append(filename)
+      exits_image = None
+      for img in os.listdir(path.replace('labels', 'images')):
+        if img.split('.')[0] == filename.split('.')[0]:
+          exits_image = img
+      if exits_image:
+        filenames.append({ 'txt': filename, 'img': exits_image })
   return filenames
 
 def save_csv(path, save_path_train, save_path_test):
@@ -31,9 +36,9 @@ def save_csv(path, save_path_train, save_path_test):
     
   with open(save_path_test, 'w') as csvfile:
     for filename in train_filenames:
-      csvfile.write(str(filename).replace('txt', 'png') + ',' +str(filename) + '\n')
+      csvfile.write(filename['img'] + ',' + filename['txt'] + '\n')
   with open(save_path_train, 'w') as csvfile:
     for filename in test_filenames:
-      csvfile.write(str(filename).replace('txt', 'png') + ',' +str(filename) + '\n')
+      csvfile.write(filename['img'] + ',' + filename['txt'] + '\n')
 
 save_csv('./USD_DIVISA/labels', './USD_DIVISA/train.csv', './USD_DIVISA/test.csv')

@@ -5,7 +5,7 @@ from utils import seed_everything
 from albumentations.pytorch import ToTensorV2
 
 DATASET = 'USD_DIVISA'
-DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+DEVICE = "cuda:0" if torch.cuda.is_available() and False else "cpu"
 # seed_everything()  # If you want deterministic behavior
 NUM_WORKERS = 4
 BATCH_SIZE = 32
