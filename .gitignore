@@ -1,6 +1,6 @@
 labels
 images
 labels.old
-
+checkpoint.pth.tar
 .DS_Store
 __pycache__
