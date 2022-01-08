@@ -155,7 +155,7 @@ class YOLOv3(nn.Module):
 
   def _create_layers(self):
     layers = nn.ModuleList()
-
+    num_classes = self.num_classes
     in_chans = self.in_chns
 
     skips_pred_num = 1
