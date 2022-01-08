@@ -3,12 +3,12 @@ import torch
 import torch.nn as nn
 
 
-if torch.cuda.is_available() and False:
+if torch.cuda.is_available():
   torch.cuda.empty_cache()
   torch.cuda.set_device(0)
 
 
-if torch.cuda.is_available() and False:  
+if torch.cuda.is_available():  
   dev = "cuda:0" 
 else:  
   dev = "cpu"  
@@ -23,7 +23,7 @@ This list has the config for the DarkNet35 layers and Scale predictions layers:
 - List: ["B", numer_of_repeats], B is for a block that consisting of:
   1. One Conv (32 filtersd, 1x1 size, stride 1)
   2. One Conv (64 filters, 3x3, stride 1)
-  3. One Conv acting like Pooling (2x2 size and stride 2)
+  3. One Conv (2x2 size and stride 2)
 
 - String: "S" is for Skip predictions branch and "U" is for Upsampling layer
 """

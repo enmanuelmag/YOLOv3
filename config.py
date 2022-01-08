@@ -5,15 +5,15 @@ from utils import seed_everything
 from albumentations.pytorch import ToTensorV2
 
 DATASET = 'USD_DIVISA'
-DEVICE = "cuda:0" if torch.cuda.is_available() and False else "cpu"
-# seed_everything()  # If you want deterministic behavior
-NUM_WORKERS = 4
-BATCH_SIZE = 32
+DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+seed_everything()
+NUM_WORKERS = 1
+BATCH_SIZE = 8 #16
 IMAGE_SIZE = 416
 NUM_CLASSES = 6
 LEARNING_RATE = 1e-5
 WEIGHT_DECAY = 1e-4
-NUM_EPOCHS = 100
+NUM_EPOCHS = 50 #100
 CONF_THRESHOLD = 0.05
 MAP_IOU_THRESH = 0.5
 NMS_IOU_THRESH = 0.45

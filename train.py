@@ -72,8 +72,10 @@ def main():
     ).to(config.DEVICE)
 
     for epoch in range(config.NUM_EPOCHS):
+        print('Epoch', epoch)
         train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors)
 
+        save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")
         if epoch > 0 and epoch % 3 == 0:
             check_class_accuracy(model, test_loader, threshold=config.CONF_THRESHOLD)
             pred_boxes, true_boxes = get_evaluation_bboxes(

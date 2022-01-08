@@ -14,7 +14,7 @@ class YoloLoss(nn.Module):
   def __init__(self):
     super().__init__()
     self.mse = nn.MSELoss() # Box predictions
-    self.bce = nn.BCEWithLogitsLoss() # Objectness predictions
+    self.bce = nn.BCEWithLogitsLoss() #Binary Cross Entropy with Logistig Objectness predictions
     self.entropy = nn.CrossEntropyLoss() # Multi label classification
     self.sigmoid = nn.Sigmoid()
 
@@ -63,13 +63,6 @@ class YoloLoss(nn.Module):
     class_loss = self.entropy(
       (predictions[..., 5:][obj]), (target[..., 5][obj].long()),
     )
-
-    #print("__________________________________")
-    #print(self.lambda_box * box_loss)
-    #print(self.lambda_obj * object_loss)
-    #print(self.lambda_noobj * no_object_loss)
-    #print(self.lambda_class * class_loss)
-    #print("\n")
 
     return (
       self.lambda_box * box_loss

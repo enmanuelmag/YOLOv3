@@ -43,10 +43,13 @@ class YOLODataset(Dataset):
         image = np.array(Image.open(img_path).convert("RGB"))
 
         if self.transform:
-            print('IMG:' + img_path)
-            augmentations = self.transform(image=image, bboxes=bboxes)
-            image = augmentations["image"]
-            bboxes = augmentations["bboxes"]
+            try:
+                augmentations = self.transform(image=image, bboxes=bboxes)
+                image = augmentations["image"]
+                bboxes = augmentations["bboxes"]
+            except Exception as e:
+                print('ERROR IMG:' + img_path)
+                raise e
 
         # Below assumes 3 scale predictions (as paper) and same num of anchors per scale
         targets = [torch.zeros((self.num_anchors // 3, S, S, 6)) for S in self.S]
