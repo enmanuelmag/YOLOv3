@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore")
 from notifier import Notifier
 
 notifier = Notifier(
-  webhook_url='https://discord.com/api/webhooks/796406472459288616/PAkiGGwqe0_PwtBxXYQvOzbk78B4RQP6VWRkvpBtw6Av0sc_mDa3saaIlwVPFjOIeIbt',
+  #webhook_url='https://discord.com/api/webhooks/796406472459288616/PAkiGGwqe0_PwtBxXYQvOzbk78B4RQP6VWRkvpBtw6Av0sc_mDa3saaIlwVPFjOIeIbt',
   chat_id='293701727',
   api_token='1878628343:AAEFVRsqDz63ycmaLOFS7gvsG969wdAsJ0w'
 )
@@ -32,7 +32,7 @@ notifier = Notifier(
 torch.backends.cudnn.benchmark = True
 
 
-def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors):
+def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, epoch=0):
     loop = tqdm(train_loader, leave=True)
     losses = []
     for batch_idx, (x, y) in enumerate(loop):
@@ -59,13 +59,14 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors):
 
         # update progress bar
         mean_loss = sum(losses) / len(losses)
-        loop.set_postfix(loss=mean_loss)
+        loop.set_postfix(epoch=epoch, loss=mean_loss)
     return losses
 
 
 def main():
     current_time = time.strftime("%Y%m%d_%H%M%S")
     path_looses = f"./loss/{current_time}_all_looses.pkl"
+    path_metrics = f"./loss/{current_time}_all_metrics.pkl"
     model = YOLOv3(num_classes=config.NUM_CLASSES).to(config.DEVICE)
     optimizer = optim.Adam(
         model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
@@ -86,24 +87,22 @@ def main():
     ).to(config.DEVICE)
     
     all_looses = []
+    metrics_accur = []
     last_mapval = -1
 
-    for epoch in range(config.NUM_EPOCHS):
-        print('Epoch', epoch + 1)
+    for epch in range(config.NUM_EPOCHS):
+        epoch = epch + 1
         #plot_couple_examples(model, test_loader, 0.6, 0.5, scaled_anchors)
-        looses = train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors)
-
+        looses = train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, epoch)
         looses = np.array(looses)
-        all_looses.append({ 'epoch': epoch + 1, 'looses': looses, 'mean': np.mean(looses), 'std': np.std(looses) })
+        all_looses.append({ 'epoch': epoch, 'looses': looses, 'mean': np.mean(looses), 'std': np.std(looses) })
         
-        #save_checkpoint(model, optimizer, filename=f"checkpoint_freq.pth.tar")
-        if epoch > 0 and (epoch % 3 == 0 or epoch >= config.NUM_EPOCHS - 1):
-            #remove prev .pkl
+        if True:
             if os.path.exists(path_looses):
                 os.remove(path_looses)
             pkl.dump(all_looses, open(path_looses, "wb"))
 
-            check_class_accuracy(model, test_loader, threshold=config.CONF_THRESHOLD)
+            metris = check_class_accuracy(model, test_loader, threshold=config.CONF_THRESHOLD)
             pred_boxes, true_boxes = get_evaluation_bboxes(
                 test_loader,
                 model,
@@ -117,13 +116,24 @@ def main():
                 iou_threshold=config.MAP_IOU_THRESH,
                 box_format="midpoint",
                 num_classes=config.NUM_CLASSES,
-            )
-            print(f"MAP: {mapval.item()}")
-            if mapval.item() > last_mapval:
-                last_mapval = mapval.item()
-                save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")
+            ).item()
+            metris['map'] = mapval
 
-            notifier(title=f'Trainin epoch {epoch}', msg=f'MAP: {mapval.item()}')
+            txt_metrics = ''
+            for m_name, m_value in metris.items():
+                txt_metrics += f"{m_name}: {m_value}\n"
+            print(txt_metrics)
+            metrics_accur.append({ 'epoch': epoch, **metris })
+
+            if os.path.exists(path_metrics):
+                os.remove(path_metrics)
+            pkl.dump(metrics_accur, open(path_metrics, "wb"))
+
+            if mapval > last_mapval:
+                last_mapval = mapval
+                save_checkpoint(model, optimizer, filename=config.CHECKPOINT_FILE)
+
+            notifier(title=f'Trainin epoch {epoch}', msg=f'Metrics:\n{txt_metrics}')
             model.train()
 
 
@@ -140,5 +150,5 @@ if __name__ == "__main__":
     print(f"Total time: {total_time}")
     notifier(
         title=f'Finish training YOLOV3',
-        msg=f'Start time: {date_start} \n End time: {date_end} \n Total time: {total_time}'
+        msg=f'Start time: {date_start} \nEnd time: {date_end} \nTotal time: {total_time} seconds',
     )
