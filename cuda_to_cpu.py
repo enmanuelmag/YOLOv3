@@ -11,5 +11,8 @@ metrics = pd.DataFrame(metrics)
 print(loos.head())
 print(metrics.head())
 
-loos.to_pickle('./data/looses.pkl')
+loos.to_pickle('./data/losses.pkl')
 metrics.to_pickle('./data/metrics.pkl')
+
+loos.to_csv('./data/losses.csv')
+metrics.to_csv('./data/metrics.csv')
