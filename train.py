@@ -90,7 +90,7 @@ def main():
 
     for epoch in range(config.NUM_EPOCHS):
         print('Epoch', epoch + 1)
-        plot_couple_examples(model, test_loader, 0.6, 0.5, scaled_anchors)
+        #plot_couple_examples(model, test_loader, 0.6, 0.5, scaled_anchors)
         looses = train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors)
 
         looses = np.array(looses)
@@ -121,7 +121,7 @@ def main():
             print(f"MAP: {mapval.item()}")
             if mapval.item() > last_mapval:
                 last_mapval = mapval.item()
-                #save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")
+                save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")
 
             notifier(title=f'Trainin epoch {epoch}', msg=f'MAP: {mapval.item()}')
             model.train()
@@ -130,7 +130,7 @@ def main():
 if __name__ == "__main__":
     start_time = time.time()
     date_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))
-    #notifier(title='Start training YOLOv3', msg=f'Traning started at {date_start}')
+    notifier(title='Start training YOLOv3', msg=f'Traning started at {date_start}')
     
     main()
     end_time = time.time()
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     total_time = end_time - start_time
     
     print(f"Total time: {total_time}")
-    """ notifier(
+    notifier(
         title=f'Finish training YOLOV3',
         msg=f'Start time: {date_start} \n End time: {date_end} \n Total time: {total_time}'
-    ) """
+    )

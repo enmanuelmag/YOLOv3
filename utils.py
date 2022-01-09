@@ -66,8 +66,10 @@ def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):
     y1 = torch.max(box1_y1, box2_y1)
     x2 = torch.min(box1_x2, box2_x2)
     y2 = torch.min(box1_y2, box2_y2)
-
-    intersection = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
+    
+    diff_x = x2 - x1 + 1
+    diff_y = y2 - y1 + 1
+    intersection = (x2 - x1 + 1) * (y2 - y1 + 1)
     box1_area = abs((box1_x2 - box1_x1 + 1) * (box1_y2 - box1_y1 + 1))
     box2_area = abs((box2_x2 - box2_x1 + 1) * (box2_y2 - box2_y1 + 1))
     return (intersection) / (box1_area + box2_area - intersection)
