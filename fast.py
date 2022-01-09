@@ -23,6 +23,7 @@ load_checkpoint('./first.model.pth.tar', model, optimizer, config.LEARNING_RATE)
 
 app = FastAPI()
 
+
 def predict(image_tensor, image):
   scaled_anchors = (
     torch.tensor(config.ANCHORS)
