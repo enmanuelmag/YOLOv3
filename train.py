@@ -1,7 +1,9 @@
 import config
 import torch
 import torch.optim as optim
-
+import time
+import numpy as np
+import pickle as pkl
 from model import YOLOv3
 from tqdm import tqdm
 from utils import (
@@ -17,6 +19,14 @@ from utils import (
 from loss import YoloLoss
 import warnings
 warnings.filterwarnings("ignore")
+
+from notifier import Notifier
+
+notifier = Notifier(
+  webhook_url='https://discord.com/api/webhooks/796406472459288616/PAkiGGwqe0_PwtBxXYQvOzbk78B4RQP6VWRkvpBtw6Av0sc_mDa3saaIlwVPFjOIeIbt',
+  chat_id='293701727',
+  api_token='1878628343:AAEFVRsqDz63ycmaLOFS7gvsG969wdAsJ0w'
+)
 
 torch.backends.cudnn.benchmark = True
 
@@ -49,6 +59,7 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors):
         # update progress bar
         mean_loss = sum(losses) / len(losses)
         loop.set_postfix(loss=mean_loss)
+    return losses
 
 
 def main():
@@ -70,13 +81,20 @@ def main():
         torch.tensor(config.ANCHORS)
         * torch.tensor(config.S).unsqueeze(1).unsqueeze(1).repeat(1, 3, 2)
     ).to(config.DEVICE)
+    
+    all_looses = []
+    last_mapval = -1
 
     for epoch in range(config.NUM_EPOCHS):
-        print('Epoch', epoch)
-        train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors)
+        print('Epoch', epoch + 1)
 
-        save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")
-        if epoch > 0 and epoch % 3 == 0:
+        looses = train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors)
+
+        looses = np.array(looses)
+        all_looses.append({ 'epoch': epoch + 1, 'looses': looses, 'mean': np.mean(looses), 'std': np.std(looses) })
+        
+        #save_checkpoint(model, optimizer, filename=f"checkpoint_freq.pth.tar")
+        if epoch > 0 and (epoch % 3 == 0 or epoch >= config.NUM_EPOCHS - 1):
             check_class_accuracy(model, test_loader, threshold=config.CONF_THRESHOLD)
             pred_boxes, true_boxes = get_evaluation_bboxes(
                 test_loader,
@@ -93,7 +111,28 @@ def main():
                 num_classes=config.NUM_CLASSES,
             )
             print(f"MAP: {mapval.item()}")
+            if mapval.item() > last_mapval:
+                last_mapval = mapval.item()
+                save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")
+
+            notifier(title=f'Trainin epoch {epoch}', msg=f'MAP: {mapval.item()}')
             model.train()
 
+    current_time = time.strftime("%Y%m%d_%H%M%S")
+    pkl.dump(all_looses, open(f"./loss/{current_time}_all_looses.pkl", "wb"))
+
 if __name__ == "__main__":
+    start_time = time.time()
+    date_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))
+    notifier(title='Start training YOLOv3', msg=f'Traning started at {date_start}')
+    
     main()
+    end_time = time.time()
+    date_end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time))
+    total_time = end_time - start_time
+    
+    print(f"Total time: {total_time}")
+    notifier(
+        title=f'Finish training YOLOV3',
+        msg=f'Start time: {date_start} \n End time: {date_end} \n Total time: {total_time}'
+    )
