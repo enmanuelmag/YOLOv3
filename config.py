@@ -13,7 +13,7 @@ IMAGE_SIZE = 416
 NUM_CLASSES = 6
 LEARNING_RATE = 0.000075 #0.0001 # 0.00001
 WEIGHT_DECAY = 1e-4
-NUM_EPOCHS = 51 #100
+NUM_EPOCHS = 150 #100
 CONF_THRESHOLD = 0.6
 MAP_IOU_THRESH = 0.5
 NMS_IOU_THRESH = 0.45
@@ -42,7 +42,8 @@ train_transforms = A.Compose(
             border_mode=cv2.BORDER_CONSTANT,
         ),
         A.RandomCrop(width=IMAGE_SIZE, height=IMAGE_SIZE),
-        #A.ColorJitter(brightness=0.6, contrast=0.6, saturation=0.6, hue=0.6, p=0.4),
+        A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.5, p=0.4),
+        A.HueSaturationValue(p=0.4),
         A.OneOf(
             [
                 A.ShiftScaleRotate(
