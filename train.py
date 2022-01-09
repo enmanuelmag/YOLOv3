@@ -78,7 +78,7 @@ def main():
       train_csv_path=config.DATASET + "/train.csv", test_csv_path=config.DATASET + "/test.csv"
     )
 
-    if config.LOAD_MODEL:
+    if config.LOAD_MODEL and os.path.exists(config.CHECKPOINT_FILE):
       load_checkpoint(config.CHECKPOINT_FILE, model, optimizer, config.LEARNING_RATE)
 
     scaled_anchors = (
