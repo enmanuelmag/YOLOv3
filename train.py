@@ -1,3 +1,4 @@
+import os
 import config
 import torch
 import torch.optim as optim
@@ -63,6 +64,8 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors):
 
 
 def main():
+    current_time = time.strftime("%Y%m%d_%H%M%S")
+    path_looses = f"./loss/{current_time}_all_looses.pkl"
     model = YOLOv3(num_classes=config.NUM_CLASSES).to(config.DEVICE)
     optimizer = optim.Adam(
         model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
@@ -95,6 +98,11 @@ def main():
         
         #save_checkpoint(model, optimizer, filename=f"checkpoint_freq.pth.tar")
         if epoch > 0 and (epoch % 3 == 0 or epoch >= config.NUM_EPOCHS - 1):
+            #remove prev .pkl
+            if os.path.exists(path_looses):
+                os.remove(path_looses)
+            pkl.dump(all_looses, open(path_looses, "wb"))
+
             check_class_accuracy(model, test_loader, threshold=config.CONF_THRESHOLD)
             pred_boxes, true_boxes = get_evaluation_bboxes(
                 test_loader,
@@ -118,8 +126,6 @@ def main():
             notifier(title=f'Trainin epoch {epoch}', msg=f'MAP: {mapval.item()}')
             model.train()
 
-    current_time = time.strftime("%Y%m%d_%H%M%S")
-    pkl.dump(all_looses, open(f"./loss/{current_time}_all_looses.pkl", "wb"))
 
 if __name__ == "__main__":
     start_time = time.time()
