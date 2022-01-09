@@ -154,6 +154,7 @@ class YOLOv3(nn.Module):
     return outputs
 
   def _create_layers(self):
+    print("Creating YOLOv3 layers...")
     layers = nn.ModuleList()
     num_classes = self.num_classes
     in_chans = self.in_chns
@@ -164,10 +165,6 @@ class YOLOv3(nn.Module):
     for module in config_layers:
       if isinstance(module, tuple):
         out_chans, kernel_size, stride = module
-        print(
-          f'Creating convolutional layer with out channels: ' +
-          f'{out_chans}, kernel size: {kernel_size} and stride: {stride}'
-        )
         layers.append(
           CNNBlock(
             in_chans,
@@ -181,8 +178,6 @@ class YOLOv3(nn.Module):
 
       elif isinstance(module, list):
         num_repeats = module[1]
-        print(f'Creating {num_repeats} repeats of a {module[0]}')
-
         layers.append(
           ResidualBlock(in_chans, repeats=num_repeats)
         )
@@ -190,7 +185,6 @@ class YOLOv3(nn.Module):
       elif isinstance(module, str):
 
         if module == types.get('S'):
-          print(f'Creating {types.get("S")} branch numnber {skips_pred_num}')
           skips_pred_num += 1
           layers += [
             ResidualBlock(in_chans, residual=False, repeats=1),
@@ -200,7 +194,6 @@ class YOLOv3(nn.Module):
           in_chans = in_chans // 2
 
         elif module == types.get('U'):
-          print(f'Creating {types.get("U")} layer numnber {up_samples_num}')
           up_samples_num += 1
           layers.append(
             nn.Upsample(scale_factor=2, mode='nearest'),

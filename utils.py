@@ -67,11 +67,10 @@ def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):
     x2 = torch.min(box1_x2, box2_x2)
     y2 = torch.min(box1_y2, box2_y2)
 
-    intersection = (x2 - x1).clamp(0) * (y2 - y1).clamp(0)
-    box1_area = abs((box1_x2 - box1_x1) * (box1_y2 - box1_y1))
-    box2_area = abs((box2_x2 - box2_x1) * (box2_y2 - box2_y1))
-
-    return intersection / (box1_area + box2_area - intersection + 1e-6)
+    intersection = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
+    box1_area = abs((box1_x2 - box1_x1 + 1) * (box1_y2 - box1_y1 + 1))
+    box2_area = abs((box2_x2 - box2_x1 + 1) * (box2_y2 - box2_y1 + 1))
+    return (intersection) / (box1_area + box2_area - intersection)
 
 
 def non_max_suppression(bboxes, iou_threshold, threshold, box_format="corners"):
@@ -88,27 +87,26 @@ def non_max_suppression(bboxes, iou_threshold, threshold, box_format="corners"):
     """
 
     assert type(bboxes) == list
-
     bboxes = [box for box in bboxes if box[1] > threshold] #p class confidence
     bboxes = sorted(bboxes, key=lambda x: x[1], reverse=True)
     bboxes_after_nms = []
 
-    while bboxes:
-        chosen_box = bboxes.pop(0)
-
-        bboxes = [
-            box
-            for box in bboxes
-            if box[0] != chosen_box[0]
-            or intersection_over_union(
-                torch.tensor(chosen_box[2:]),
-                torch.tensor(box[2:]),
-                box_format=box_format,
+    idx_remove = []
+    for i, box in enumerate(bboxes):
+        if i in idx_remove:
+            continue
+        for j, box2 in enumerate(bboxes):
+            if j in idx_remove or j == i or box2[0] != box[0]:
+                continue
+            iou = iou_width_height(
+                torch.tensor(box[2:]), torch.tensor(box2[2:])
             )
-            < iou_threshold
-        ]
-
-        bboxes_after_nms.append(chosen_box)
+            if iou > iou_threshold:
+                idx_remove.append(j)
+    for i, box in enumerate(bboxes):
+        if i in idx_remove:
+            continue
+        bboxes_after_nms.append(box)
 
     return bboxes_after_nms
 
@@ -222,8 +220,6 @@ def plot_image(image, boxes):
     cmap = plt.get_cmap("tab20b")
     class_labels = config.USD_DIVISA_CLASSES if config.DATASET=='USD_DIVISA' else config.COCO_LABELS
     colors = [cmap(i) for i in np.linspace(0, 1, len(class_labels))]
-    print(image)
-    print(image.shape)
     im = np.array(image)
     height, width, _ = im.shape
 
