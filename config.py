@@ -8,7 +8,7 @@ DATASET = 'USD_DIVISA'
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 seed_everything()
 NUM_WORKERS = 1
-BATCH_SIZE = 6 #16
+BATCH_SIZE = 8 #16
 IMAGE_SIZE = 416
 NUM_CLASSES = 6
 LEARNING_RATE = 0.000075 #0.0001 # 0.00001
