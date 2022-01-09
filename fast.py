@@ -19,7 +19,7 @@ optimizer = optim.Adam(
   model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
 )
 
-load_checkpoint(config.CHECKPOINT_FILE, model, optimizer, config.LEARNING_RATE)
+load_checkpoint('./first.model.pth.tar', model, optimizer, config.LEARNING_RATE)
 
 app = FastAPI()
 
@@ -59,6 +59,8 @@ def transform(image):
   augmentations = config.prod_transforms(image=image)
   return augmentations['image']
 
+
+"""ENDPOINTS"""
 
 @app.get("/ping")
 def ping():
