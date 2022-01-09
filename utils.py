@@ -358,6 +358,7 @@ def cells_to_bboxes(predictions, anchors, S, is_preds=True):
     converted_bboxes = torch.cat((best_class, scores, x, y, w_h), dim=-1).reshape(BATCH_SIZE, num_anchors * S * S, 6)
     return converted_bboxes.tolist()
 
+
 def check_class_accuracy(model, loader, threshold):
     model.eval()
     tot_class_preds, correct_class = 0, 0
@@ -385,9 +386,11 @@ def check_class_accuracy(model, loader, threshold):
             correct_noobj += torch.sum(obj_preds[noobj] == y[i][..., 0][noobj])
             tot_noobj += torch.sum(noobj)
 
-    print(f"Class accuracy is: {(correct_class/(tot_class_preds+1e-16))*100:2f}%")
-    print(f"No obj accuracy is: {(correct_noobj/(tot_noobj+1e-16))*100:2f}%")
-    print(f"Obj accuracy is: {(correct_obj/(tot_obj+1e-16))*100:2f}%")
+    return {
+        'class_accuracy': (correct_class/(tot_class_preds+1e-16))*100,
+        'noobj_accuracy': (correct_noobj/(tot_noobj+1e-16))*100,
+        'obj_accuracy': (correct_obj/(tot_obj+1e-16))*100
+    }
 
 
 def get_mean_std(loader):
