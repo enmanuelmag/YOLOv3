@@ -261,6 +261,55 @@ def plot_image(image, boxes):
 
     plt.show()
 
+def get_image(image, boxes):
+    """Plots predicted bounding boxes on the image"""
+    cmap = plt.get_cmap("tab20b")
+    class_labels = config.USD_DIVISA_CLASSES if config.DATASET=='USD_DIVISA' else config.COCO_LABELS
+    colors = [cmap(i) for i in np.linspace(0, 1, len(class_labels))]
+    im = np.array(image)
+    height, width, _ = im.shape
+
+    # Create figure and axes
+    fig, ax = plt.subplots(1)
+    # Display the image
+    ax.imshow(im)
+
+    # box[0] is x midpoint, box[2] is width
+    # box[1] is y midpoint, box[3] is height
+
+    # Create a Rectangle patch
+    for box in boxes:
+        assert len(box) == 6, "box should contain class pred, confidence, x, y, width, height"
+        class_pred = box[0]
+        box = box[2:]
+        upper_left_x = box[0] - box[2] / 2
+        upper_left_y = box[1] - box[3] / 2
+        rect = patches.Rectangle(
+            (upper_left_x * width, upper_left_y * height),
+            box[2] * width,
+            box[3] * height,
+            linewidth=2,
+            edgecolor=colors[int(class_pred)],
+            facecolor="none",
+        )
+        # Add the patch to the Axes
+        #ax.add_patch(rect)
+        plt.text(
+            upper_left_x * width,
+            upper_left_y * height,
+            s=class_labels[int(class_pred)].capitalize(),
+            color="white",
+            verticalalignment="top",
+            bbox={"color": colors[int(class_pred)], "pad": 0},
+        )
+
+    import time
+    filename = './predictions/'+str(int(time.time()))+'.png'
+    plt.axis('off')
+    plt.savefig(filename, bbox_inches='tight')
+    return filename
+    
+
 
 def get_evaluation_bboxes(
     loader,
@@ -418,7 +467,7 @@ def save_checkpoint(model, optimizer, filename="my_checkpoint.pth.tar"):
 
 
 def load_checkpoint(checkpoint_file, model, optimizer, lr):
-    print("=> Loading checkpoint")
+    print("=> Loading model")
     checkpoint = torch.load(checkpoint_file, map_location=config.DEVICE)
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])

@@ -1,17 +1,22 @@
-import config
+import os
+import sys
 import torch
+import base64
+import config
+import asyncio
+import warnings
 import numpy as np
+from model import YOLOv3
 import torch.optim as optim
 from PIL import Image, ImageFile
-from model import YOLOv3
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, File, UploadFile, Form, Response
 from utils import (
   load_checkpoint,
   cells_to_bboxes,
-  non_max_suppression
+  non_max_suppression,
+  get_image
 )
-from dataset import plot_image
-from fastapi import FastAPI, File, UploadFile, Form
-import warnings
 warnings.filterwarnings("ignore")
 
 model = YOLOv3(num_classes=config.NUM_CLASSES).to(config.DEVICE)
@@ -19,9 +24,20 @@ optimizer = optim.Adam(
   model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
 )
 
-load_checkpoint('./first.model.pth.tar', model, optimizer, config.LEARNING_RATE)
+LAST_MODEL = './checkpoint.pth.tar'
+PREV_MODEL = './models/second.model.pth.tar'
+PEV_2_MODEL = './models/first.model.pth.tar'
+load_checkpoint(PEV_2_MODEL, model, optimizer, config.LEARNING_RATE)
 
 app = FastAPI()
+
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=["*"],
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"]
+)
 
 
 def predict(image_tensor, image):
@@ -44,7 +60,7 @@ def predict(image_tensor, image):
   
   class_labels = config.USD_DIVISA_CLASSES
   nms_boxes = non_max_suppression(
-    bboxes[0], iou_threshold=0.000000005, threshold=0.85
+    bboxes[0], iou_threshold=0.25, threshold=0.5
   )
 
   prediction = {}
@@ -53,8 +69,9 @@ def predict(image_tensor, image):
     prediction[class_labels[class_pred]] = prediction.get(class_labels[class_pred], 0) + 1
   
   print('Prediction', prediction)
-  plot_image(np.array(Image.open(image.file).convert("RGB")), nms_boxes)
-  return prediction
+  image_name = get_image(np.array(Image.open(image.file).convert("RGB")), nms_boxes)
+
+  return prediction, image_name
 
 def transform(image):
   augmentations = config.prod_transforms(image=image)
@@ -69,13 +86,19 @@ def ping():
 
 @app.post("/predict")
 def predict_image(image: UploadFile = File(...)):
-  print('DEVICE', config.DEVICE)
-  print('Filename', image.filename)
+  print('DEVICE | Filename', config.DEVICE, image.filename)
 
   image_array = np.array(Image.open(image.file).convert("RGB"))
   image_array = transform(image_array)
   image_array = np.transpose(image_array, (2, 0, 1))
   image_tensor = torch.from_numpy(np.array([ image_array ])).to(config.DEVICE)
+  prediction, image_filename = predict(image_tensor, image)
+  
+  with open(image_filename, 'rb') as f:
+    image_bytes = base64.b64encode( f.read())
+  os.remove(image_filename)
+
   return {
-    "prediction": predict(image_tensor, image)
+    "prediction": prediction,
+    "image": image_bytes
   }
