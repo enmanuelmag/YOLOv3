@@ -293,7 +293,7 @@ def get_image(image, boxes):
             facecolor="none",
         )
         # Add the patch to the Axes
-        #ax.add_patch(rect)
+        ax.add_patch(rect)
         plt.text(
             upper_left_x * width,
             upper_left_y * height,

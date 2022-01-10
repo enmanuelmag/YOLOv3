@@ -13,8 +13,8 @@ IMAGE_SIZE = 416
 NUM_CLASSES = 6
 LEARNING_RATE = 0.000075 #0.0001 # 0.00001
 WEIGHT_DECAY = 1e-4
-NUM_EPOCHS = 200 #100
-START_EPOCH = 200
+NUM_EPOCHS = 450 #200 #100
+START_EPOCH = 0
 CONF_THRESHOLD = 0.6
 MAP_IOU_THRESH = 0.5
 NMS_IOU_THRESH = 0.45
@@ -22,7 +22,7 @@ S = [IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8]
 PIN_MEMORY = True
 LOAD_MODEL = True
 SAVE_MODEL = True
-CHECKPOINT_FILE = "checkpoint.reset.pth.tar"
+CHECKPOINT_FILE = "checkpoint.full.pth.tar"
 IMG_DIR = DATASET + "/images/"
 LABEL_DIR = DATASET + "/labels/"
 
@@ -55,10 +55,10 @@ train_transforms = A.Compose(
             p=1.0,
         ),
         A.HorizontalFlip(p=0.5),
-        A.Blur(p=0.1),
-        A.CLAHE(p=0.1),
-        A.Posterize(p=0.1),
-        A.ToGray(p=0.1),
+        A.Blur(p=0.15),
+        A.CLAHE(p=0.15),
+        A.Posterize(p=0.12),
+        A.ToGray(p=0.08),
         A.ChannelShuffle(p=0.05),
         A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255,),
         ToTensorV2(),
