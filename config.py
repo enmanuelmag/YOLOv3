@@ -4,7 +4,8 @@ import albumentations as A
 from utils import seed_everything
 from albumentations.pytorch import ToTensorV2
 
-USE_DROPOUT = True
+USE_DROPOUT = False
+USE_DWISE = False
 DATASET = 'USD_DIVISA'
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 seed_everything()
@@ -23,7 +24,7 @@ S = [IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8]
 PIN_MEMORY = True
 LOAD_MODEL = True
 SAVE_MODEL = True
-CHECKPOINT_FILE = "checkpoint.full.dropout.pth.tar"
+CHECKPOINT_FILE = "checkpoint.full.fix.pth.tar"
 IMG_DIR = DATASET + "/images/"
 LABEL_DIR = DATASET + "/labels/"
 
