@@ -62,33 +62,35 @@ class CNNBlock(nn.Module):
   """
   This block is used to group a layers that repeat a number of times
   """
-  def __init__(self, in_chns, out_chns, bn=True, **kwargs):
+  def __init__(self, in_chns, out_chns, bn=True, drop=0.10, **kwargs):
     super().__init__()
     #bn is for batch normalization
     self.conv = nn.Conv2d(in_chns, out_chns, bias=not bn,**kwargs)
+    self.dropout = nn.Dropout2d(drop)
     self.bn = nn.BatchNorm2d(out_chns) if bn else None
     self.leaky = nn.LeakyReLU(0.1)
     self.use_bn = bn
 
   def forward(self, x):
     if self.use_bn:
-      return self.leaky(self.bn(self.conv(x)))
+      return self.leaky(self.bn(self.dropout(self.conv(x))))
     
-    return self.conv(x)
+    return self.dropout(self.conv(x))
 
 
 class ResidualBlock(nn.Module):
   """
   This block is used to group a layers that repeat a number of times
   """
-  def __init__(self, chns, residual=True, repeats=1):
+  def __init__(self, chns, residual=True, start_drop=0.10, end_drop=0.20, repeats=1):
     super().__init__()
     self.layers = nn.ModuleList()
-    for _ in range(repeats):
+    for i in range(repeats):
+      drop = (start_drop + (end_drop - start_drop) * i) / (repeats - 1)
       self.layers += [
         nn.Sequential(
-          CNNBlock(in_chns=chns, out_chns=chns//2, kernel_size=1),
-          CNNBlock(in_chns=chns//2, out_chns=chns, kernel_size=3, padding=1)
+          CNNBlock(in_chns=chns, out_chns=chns//2, drop=drop, kernel_size=1),
+          CNNBlock(in_chns=chns//2, out_chns=chns, drop=drop, kernel_size=3, padding=1)
         )
       ]
 
@@ -98,7 +100,6 @@ class ResidualBlock(nn.Module):
   def forward(self, x):
     for layer in self.layers:
       x = layer(x) + x if self.residual else layer(x)
-
     return x
 
 
@@ -115,8 +116,8 @@ class ScalePrediction(nn.Module):
     """"""
     self.num_classes = num_classes
     self.pred = nn.Sequential(
-      CNNBlock(in_chns, 2 * in_chns, kernel_size=3, padding=1),
-      CNNBlock(2 * in_chns, 3 * (num_classes + 5), bn=False, kernel_size=1)
+      CNNBlock(in_chns, 2 * in_chns, kernel_size=3, drop=0.25, padding=1),
+      CNNBlock(2 * in_chns, 3 * (num_classes + 5), drop=0.30, bn=False, kernel_size=1)
     )
 
   def forward(self, x):
