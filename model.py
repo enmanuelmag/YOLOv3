@@ -86,7 +86,7 @@ class ResidualBlock(nn.Module):
     super().__init__()
     self.layers = nn.ModuleList()
     for i in range(repeats):
-      drop = (start_drop + (end_drop - start_drop) * i) / (repeats - 1)
+      drop = (start_drop + ((end_drop - start_drop) * i) / (repeats + 1))
       self.layers += [
         nn.Sequential(
           CNNBlock(in_chns=chns, out_chns=chns//2, drop=drop, kernel_size=1),
