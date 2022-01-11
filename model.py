@@ -1,7 +1,7 @@
 import time
 import torch
 import torch.nn as nn
-
+import config
 
 if torch.cuda.is_available():
   torch.cuda.empty_cache()
@@ -66,7 +66,7 @@ class CNNBlock(nn.Module):
     super().__init__()
     #bn is for batch normalization
     self.conv = nn.Conv2d(in_chns, out_chns, bias=not bn,**kwargs)
-    self.dropout = nn.Dropout2d(drop)
+    self.dropout = nn.Dropout2d(drop if config.USE_DROPOUT else 0)
     self.bn = nn.BatchNorm2d(out_chns) if bn else None
     self.leaky = nn.LeakyReLU(0.1)
     self.use_bn = bn

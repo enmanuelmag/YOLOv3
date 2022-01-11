@@ -4,6 +4,7 @@ import albumentations as A
 from utils import seed_everything
 from albumentations.pytorch import ToTensorV2
 
+USE_DROPOUT = True
 DATASET = 'USD_DIVISA'
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 seed_everything()
