@@ -65,8 +65,8 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, ep
 
 def main():
     current_time = time.strftime("%Y%m%d_%H%M%S")
-    path_looses = f"./loss/{current_time}_all_looses.pkl"
-    path_metrics = f"./loss/{current_time}_all_metrics.pkl"
+    path_looses = f"./loss/{current_time}_all_looses.drop.pkl"
+    path_metrics = f"./loss/{current_time}_all_metrics.drop.pkl"
     model = YOLOv3(num_classes=config.NUM_CLASSES).to(config.DEVICE)
     optimizer = optim.Adam(
         model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
