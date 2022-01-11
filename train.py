@@ -96,7 +96,7 @@ def main():
         looses = train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, epoch)
         looses = np.array(looses)
         all_looses.append({ 'epoch': epoch, 'looses': looses, 'mean': np.mean(looses), 'std': np.std(looses) })
-        
+        save_checkpoint(model, optimizer, filename='last.checkpoint.pht.tar')
         if epoch > 0 and (epoch % 3 == 0 or epoch >= config.NUM_EPOCHS):
             if os.path.exists(path_looses):
                 os.remove(path_looses)

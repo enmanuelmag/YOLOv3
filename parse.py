@@ -35,10 +35,10 @@ def save_csv(path, save_path_train, save_path_test):
   if os.path.isfile(save_path_test):
     os.remove(save_path_test)
     
-  with open(save_path_test, 'w') as csvfile:
+  with open(save_path_train, 'w') as csvfile:
     for filename in train_filenames:
       csvfile.write(filename['img'] + ',' + filename['txt'] + '\n')
-  with open(save_path_train, 'w') as csvfile:
+  with open(save_path_test, 'w') as csvfile:
     for filename in test_filenames:
       csvfile.write(filename['img'] + ',' + filename['txt'] + '\n')
 
