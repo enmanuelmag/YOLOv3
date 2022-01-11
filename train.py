@@ -65,8 +65,8 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, ep
 
 def main():
     current_time = time.strftime("%Y%m%d_%H%M%S")
-    path_looses = f"./loss/{current_time}_all_looses.drop.pkl"
-    path_metrics = f"./loss/{current_time}_all_metrics.drop.pkl"
+    path_looses = f"./loss/{current_time}_all_looses.resume.pkl"
+    path_metrics = f"./loss/{current_time}_all_metrics.resume.pkl"
     model = YOLOv3(num_classes=config.NUM_CLASSES).to(config.DEVICE)
     optimizer = optim.Adam(
         model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
@@ -85,10 +85,18 @@ def main():
         torch.tensor(config.ANCHORS)
         * torch.tensor(config.S).unsqueeze(1).unsqueeze(1).repeat(1, 3, 2)
     ).to(config.DEVICE)
+
+    if os.path.exists(path_looses):
+        all_looses = pkl.load(open(path_looses, 'rb'))
+    else:
+        all_looses = []
     
-    all_looses = []
-    metrics_accur = []
-    last_mapval = -1
+    if os.path.exists(path_metrics):
+        metrics_accur = pkl.load(open(path_metrics, 'rb'))
+    else:
+        metrics_accur = []
+    
+    last_mapval = 0.7755720019340515
 
     for epch in range(config.NUM_EPOCHS):
         epoch = epch + 1 + config.START_EPOCH
@@ -96,7 +104,7 @@ def main():
         looses = train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, epoch)
         looses = np.array(looses)
         all_looses.append({ 'epoch': epoch, 'looses': looses, 'mean': np.mean(looses), 'std': np.std(looses) })
-        save_checkpoint(model, optimizer, filename='last.checkpoint.drop.pht.tar')
+        save_checkpoint(model, optimizer, filename='last.checkpoint.loss.class.pht.tar')
         if epoch > 0 and (epoch % 3 == 0 or epoch >= config.NUM_EPOCHS):
             if os.path.exists(path_looses):
                 os.remove(path_looses)
