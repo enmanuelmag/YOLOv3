@@ -64,7 +64,7 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, ep
 
 
 def main():
-    current_time = time.strftime("%Y%m%d_%H%M%S")
+    current_time = 'logs'
     path_looses = f"./loss/{current_time}_all_looses.resume.pkl"
     path_metrics = f"./loss/{current_time}_all_metrics.resume.pkl"
     model = YOLOv3(num_classes=config.NUM_CLASSES).to(config.DEVICE)
@@ -96,7 +96,7 @@ def main():
     else:
         metrics_accur = []
     
-    last_mapval = 0.7755720019340515
+    last_mapval = -1
 
     for epch in range(config.NUM_EPOCHS):
         epoch = epch + 1 + config.START_EPOCH
