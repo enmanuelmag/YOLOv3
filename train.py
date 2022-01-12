@@ -96,7 +96,11 @@ def main():
     else:
         metrics_accur = []
     
-    last_mapval = -1
+    if os.path.exists('last_mapval.txt'):
+        with open('last_mapval.txt', 'r') as f:
+            last_mapval = float(f.readline())
+    else:
+        last_mapval = -1
 
     for epch in range(config.NUM_EPOCHS):
         epoch = epch + 1 + config.START_EPOCH
@@ -139,6 +143,8 @@ def main():
 
             if mapval > last_mapval:
                 last_mapval = mapval
+                with open(f"last_mapval.txt", "w") as f:
+                    f.write(f"{mapval}")
                 save_checkpoint(model, optimizer, filename=config.CHECKPOINT_FILE)
 
             notifier(title=f'Trainin epoch {epoch}', msg=f'Metrics:\n{txt_metrics}')
