@@ -16,7 +16,7 @@ NUM_CLASSES = 6
 LEARNING_RATE = 0.000075 #0.0001 # 0.00001
 WEIGHT_DECAY = 1e-4
 NUM_EPOCHS = 450 #200 #100
-START_EPOCH = 159
+START_EPOCH = 0
 CONF_THRESHOLD = 0.6
 MAP_IOU_THRESH = 0.5
 NMS_IOU_THRESH = 0.45
@@ -90,12 +90,12 @@ prod_transforms = A.Compose(
 )
 
 USD_DIVISA_CLASSES = [
-  'one cent',
-  'five cents',
-  'ten cents',
-  'twenty five cents',
-  'fifty cents',
-  'one dollar'
+    'un centavo',
+    'cinco centavos',
+    'diez centavos',
+    'veinte centavos',
+    'cincuenta centavos',
+    'un dólar'
 ]
 
 COCO_LABELS = [

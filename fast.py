@@ -24,10 +24,16 @@ optimizer = optim.Adam(
   model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
 )
 
-LAST_MODEL = './checkpoint.pth.tar'
-PREV_MODEL = './models/second.model.pth.tar'
-PEV_2_MODEL = './models/first.model.pth.tar'
-load_checkpoint(PEV_2_MODEL, model, optimizer, config.LEARNING_RATE)
+BEST_1_MODEL = './models/best.full.fix.pth.tar'
+BEST_2_MODEL = './models/best.2.full.fix.pth.tar'
+BEST_LOSS = './models/best.3.full.loss.class.pth.tar'
+
+LAST_BEST_MODEL = './last.checkpoint.full.fix.pht.tar'
+LAST_LOSS_MODEL = './last.checkpoint.loss.class.pht.tar'
+
+#1. BEST MODEL 2
+#2. BEST MODEL 1
+load_checkpoint(BEST_2_MODEL, model, optimizer, config.LEARNING_RATE)
 
 app = FastAPI()
 
