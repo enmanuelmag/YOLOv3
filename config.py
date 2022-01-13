@@ -93,7 +93,7 @@ USD_DIVISA_CLASSES = [
     'un centavo',
     'cinco centavos',
     'diez centavos',
-    'veinte centavos',
+    'veinticinco centavos',
     'cincuenta centavos',
     'un dólar'
 ]

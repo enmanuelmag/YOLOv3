@@ -66,7 +66,7 @@ def predict(image_tensor, image):
   
   class_labels = config.USD_DIVISA_CLASSES
   nms_boxes = non_max_suppression(
-    bboxes[0], iou_threshold=0.25, threshold=0.5
+    bboxes[0], iou_threshold=0.85, threshold=0.55
   )
 
   prediction = {}
