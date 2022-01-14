@@ -84,7 +84,9 @@ def transform(image):
   return augmentations['image']
 
 
-"""ENDPOINTS"""
+"""
+ENDPOINTS
+"""
 
 @app.get("/ping")
 def ping():
@@ -101,10 +103,10 @@ def predict_image(image: UploadFile = File(...)):
   prediction, image_filename = predict(image_tensor, image)
   
   with open(image_filename, 'rb') as f:
-    image_bytes = base64.b64encode( f.read())
+    image_bytes = base64.b64encode(f.read())
   os.remove(image_filename)
 
   return {
-    "prediction": prediction,
-    "image": image_bytes
+    "image": image_bytes,
+    "prediction": prediction
   }
