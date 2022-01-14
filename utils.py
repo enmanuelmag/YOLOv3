@@ -5,6 +5,7 @@ import numpy as np
 import os
 import random
 import torch
+import time
 
 from collections import Counter
 from torch.utils.data import DataLoader
@@ -303,7 +304,6 @@ def get_image(image, boxes):
             bbox={"color": colors[int(class_pred)], "pad": 0},
         )
 
-    import time
     filename = './predictions/'+str(int(time.time()))+'.png'
     plt.axis('off')
     plt.savefig(filename, bbox_inches='tight')

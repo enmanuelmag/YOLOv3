@@ -82,12 +82,14 @@ test_transforms = A.Compose(
 prod_transforms = A.Compose(
     [
         A.LongestMaxSize(max_size=IMAGE_SIZE),
-        A.PadIfNeeded(
-            min_height=IMAGE_SIZE, min_width=IMAGE_SIZE, border_mode=cv2.BORDER_CONSTANT
-        ),
         A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255,),
     ]
 )
+
+""" A.PadIfNeeded(
+min_height=IMAGE_SIZE, min_width=IMAGE_SIZE, border_mode=cv2.BORDER_CONSTANT
+),
+"""
 
 USD_DIVISA_CLASSES = [
     'un centavo',
