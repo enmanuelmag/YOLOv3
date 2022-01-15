@@ -26,6 +26,7 @@ This list has the config for the DarkNet35 layers and Scale predictions layers:
   3. One Conv (2x2 size and stride 2)
 
 - String: "S" is for Skip predictions branch and "U" is for Upsampling layer
+
 """
 config_layers = [
   #Begin the Darknet53
