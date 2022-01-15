@@ -1,1 +1,1 @@
-conda activate pytorchenv && uvicorn fast:app --port 3001 --reload --host 192.168.100.6
+conda activate pytorchenv && uvicorn fast:app --port 3001 --reload --host 192.168.100.37
