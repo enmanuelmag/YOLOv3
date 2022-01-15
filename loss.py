@@ -19,7 +19,7 @@ class YoloLoss(nn.Module):
     self.sigmoid = nn.Sigmoid()
 
     # Constants signifying how much to pay for each respective part of the loss
-    self.lambda_class = 7
+    self.lambda_class = 5
     self.lambda_noobj = 10
     self.lambda_obj = 3
     self.lambda_box = 10

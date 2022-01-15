@@ -11,7 +11,7 @@ DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 seed_everything()
 NUM_WORKERS = 1
 BATCH_SIZE = 6 #16
-IMAGE_SIZE = 416
+IMAGE_SIZE = 210
 NUM_CLASSES = 6
 LEARNING_RATE = 0.000075 #0.0001 # 0.00001
 WEIGHT_DECAY = 1e-4
@@ -24,7 +24,7 @@ S = [IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8]
 PIN_MEMORY = True
 LOAD_MODEL = True
 SAVE_MODEL = True
-CHECKPOINT_FILE = "checkpoint.full.loss.class.pth.tar"
+CHECKPOINT_FILE = "checkpoint.model.rebuild.pth.tar"
 IMG_DIR = DATASET + "/images/"
 LABEL_DIR = DATASET + "/labels/"
 
@@ -52,7 +52,7 @@ train_transforms = A.Compose(
                 A.ShiftScaleRotate(
                     rotate_limit=20, p=0.5, border_mode=cv2.BORDER_CONSTANT
                 ),
-                A.IAAAffine(shear=15, p=0.5, mode="constant"),
+                A.Affine(p=0.5),
             ],
             p=1.0,
         ),
