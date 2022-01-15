@@ -4,14 +4,12 @@ import albumentations as A
 from utils import seed_everything
 from albumentations.pytorch import ToTensorV2
 
-USE_DROPOUT = False
-USE_DWISE = False
 DATASET = 'USD_DIVISA'
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 seed_everything()
 NUM_WORKERS = 1
 BATCH_SIZE = 6 #16
-IMAGE_SIZE = 210
+IMAGE_SIZE = 416
 NUM_CLASSES = 6
 LEARNING_RATE = 0.000075 #0.0001 # 0.00001
 WEIGHT_DECAY = 1e-4
@@ -52,7 +50,7 @@ train_transforms = A.Compose(
                 A.ShiftScaleRotate(
                     rotate_limit=20, p=0.5, border_mode=cv2.BORDER_CONSTANT
                 ),
-                A.Affine(p=0.5),
+                A.IAAAffine(shear=15, p=0.5, mode="constant"),
             ],
             p=1.0,
         ),
@@ -82,14 +80,12 @@ test_transforms = A.Compose(
 prod_transforms = A.Compose(
     [
         A.LongestMaxSize(max_size=IMAGE_SIZE),
+        A.PadIfNeeded(
+            min_height=IMAGE_SIZE, min_width=IMAGE_SIZE, border_mode=cv2.BORDER_CONSTANT
+        ),
         A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255,),
     ]
 )
-
-""" A.PadIfNeeded(
-min_height=IMAGE_SIZE, min_width=IMAGE_SIZE, border_mode=cv2.BORDER_CONSTANT
-),
-"""
 
 USD_DIVISA_CLASSES = [
     'un centavo',

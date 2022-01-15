@@ -1,7 +1,7 @@
 import time
 import torch
 import torch.nn as nn
-import config
+
 
 if torch.cuda.is_available():
   torch.cuda.empty_cache()
@@ -18,7 +18,7 @@ types = { 'U': 'UPSAMPLING', 'B': 'BLOCK_CONVS', 'S': 'SKIP_PREDICTIONS' }
 """
 This list has the config for the DarkNet35 layers and Scale predictions layers:
 
-- Tuple : (out_channel, kernel_size, stride, use deepth wise convolution)
+- Tuple : (out_channel, kernel_size, stride)
 
 - List: ["B", numer_of_repeats], B is for a block that consisting of:
   1. One Conv (32 filtersd, 1x1 size, stride 1)
@@ -29,77 +29,66 @@ This list has the config for the DarkNet35 layers and Scale predictions layers:
 """
 config_layers = [
   #Begin the Darknet53
-  (32, 3, 1, False),
-  (64, 3, 2, True),
+  (32, 3, 1),
+  (64, 3, 2),
   [types.get('B'), 1],
-  (128, 3, 2, True),
+  (128, 3, 2),
   [types.get('B'), 2],
-  (256, 3, 2, True),
+  (256, 3, 2),
   [types.get('B'), 8],
-  (512, 3, 2, True),
+  (512, 3, 2),
   [types.get('B'), 8],
-  (1024, 3, 2, True),
+  (1024, 3, 2),
   [types.get('B'), 4],
   #End the Darknet53
   #Begin scales predictions
-  (512, 1, 1, False),
-  (1024, 3, 1, False),
+  (512, 1, 1),
+  (1024, 3, 1),
   types.get('S'),
-  (256, 1, 1, False),
+  (256, 1, 1),
   types.get('U'),
-  (256, 1, 1, False),
-  (512, 3, 1, False),
+  (256, 1, 1),
+  (512, 3, 1),
   types.get('S'),
-  (128, 1, 1, False),
+  (128, 1, 1),
   types.get('U'),
-  (128, 1, 1, False),
-  (256, 3, 1, False),
+  (128, 1, 1),
+  (256, 3, 1),
   types.get('S'),
   #End scale predictions
 ]
-
-class DepthwiseConv(nn.Module):
-  def __init__(self, nin, nout, kernel_size = 3, padding = 1, bias=False, stride=1):
-    super(DepthwiseConv, self).__init__()
-    self.depthwise = nn.Conv2d(nin, nin, stride=stride, kernel_size=kernel_size, padding=padding, groups=nin, bias=bias)
-    self.pointwise = nn.Conv2d(nin, nout, stride=stride, kernel_size=1, bias=bias)
-
-  def forward(self, x):
-    return self.pointwise(self.depthwise(x))
 
 class CNNBlock(nn.Module):
   """
   This block is used to group a layers that repeat a number of times
   """
-  def __init__(self, in_chns, out_chns, bn=True, drop=0, dwise=False, **kwargs):
+  def __init__(self, in_chns, out_chns, bn=True, **kwargs):
     super().__init__()
     #bn is for batch normalization
-    self.conv = DepthwiseConv(in_chns, out_chns, bias=not bn, **kwargs) if dwise else nn.Conv2d(in_chns, out_chns, bias=not bn,**kwargs)
-    self.dropout = nn.Dropout2d(drop if config.USE_DROPOUT else 0)
+    self.conv = nn.Conv2d(in_chns, out_chns, bias=not bn,**kwargs)
     self.bn = nn.BatchNorm2d(out_chns) if bn else None
     self.leaky = nn.LeakyReLU(0.1)
     self.use_bn = bn
 
   def forward(self, x):
     if self.use_bn:
-      return self.leaky(self.bn(self.dropout(self.conv(x))))
+      return self.leaky(self.bn(self.conv(x)))
     
-    return self.dropout(self.conv(x))
+    return self.conv(x)
 
 
 class ResidualBlock(nn.Module):
   """
   This block is used to group a layers that repeat a number of times
   """
-  def __init__(self, chns, residual=True, start_drop=0.10, end_drop=0.20, repeats=1, dwise=False):
+  def __init__(self, chns, residual=True, repeats=1):
     super().__init__()
     self.layers = nn.ModuleList()
-    for i in range(repeats):
-      drop = (start_drop + ((end_drop - start_drop) * i) / (repeats + 1))
+    for _ in range(repeats):
       self.layers += [
         nn.Sequential(
-          CNNBlock(in_chns=chns, out_chns=chns//2, drop=drop, dwise=dwise, kernel_size=1),
-          CNNBlock(in_chns=chns//2, out_chns=chns, drop=drop, dwise=dwise, kernel_size=3, padding=1)
+          CNNBlock(in_chns=chns, out_chns=chns//2, kernel_size=1),
+          CNNBlock(in_chns=chns//2, out_chns=chns, kernel_size=3, padding=1)
         )
       ]
 
@@ -109,6 +98,7 @@ class ResidualBlock(nn.Module):
   def forward(self, x):
     for layer in self.layers:
       x = layer(x) + x if self.residual else layer(x)
+
     return x
 
 
@@ -125,8 +115,8 @@ class ScalePrediction(nn.Module):
     """"""
     self.num_classes = num_classes
     self.pred = nn.Sequential(
-      CNNBlock(in_chns, 2 * in_chns, kernel_size=3, drop=0, padding=1),
-      CNNBlock(2 * in_chns, 3 * (num_classes + 5), drop=0, bn=False, kernel_size=1)
+      CNNBlock(in_chns, 2 * in_chns, kernel_size=3, padding=1),
+      CNNBlock(2 * in_chns, 3 * (num_classes + 5), bn=False, kernel_size=1)
     )
 
   def forward(self, x):
@@ -174,12 +164,11 @@ class YOLOv3(nn.Module):
 
     for module in config_layers:
       if isinstance(module, tuple):
-        out_chans, kernel_size, stride, dwise = module
+        out_chans, kernel_size, stride = module
         layers.append(
           CNNBlock(
             in_chans,
             out_chans,
-            dwise=dwise and config.USE_DWISE,
             stride=stride,
             kernel_size=kernel_size,
             padding=1 if kernel_size == 3 else 0
@@ -198,7 +187,7 @@ class YOLOv3(nn.Module):
         if module == types.get('S'):
           skips_pred_num += 1
           layers += [
-            ResidualBlock(in_chans, residual=False, repeats=1, dwise=config.USE_DWISE),
+            ResidualBlock(in_chans, residual=False, repeats=1),
             CNNBlock(in_chans, in_chans//2, kernel_size=1),
             ScalePrediction(in_chans//2 , num_classes)
           ]
@@ -225,8 +214,8 @@ if __name__ == "__main__":
   out = model(x)
   print(f'Time: {time.time() - start}')
 
-  assert out[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
-  assert out[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
-  assert out[2].shape == (2, 3, IMAGE_SIZE//8, IMAGE_SIZE//8, num_classes + 5)
+  assert model(x)[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
+  assert model(x)[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
+  assert model(x)[2].shape == (2, 3, IMAGE_SIZE//8, IMAGE_SIZE//8, num_classes + 5)
 
   print("All done without errors")
