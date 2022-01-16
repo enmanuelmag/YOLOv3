@@ -4,6 +4,7 @@ import matplotlib.patches as patches
 import numpy as np
 import os
 import random
+import time
 import torch
 
 from collections import Counter
@@ -302,8 +303,9 @@ def get_image(image, boxes):
             verticalalignment="top",
             bbox={"color": colors[int(class_pred)], "pad": 0},
         )
+    if not os.path.exists('./predictions'):
+        os.mkdir('./predictions')
 
-    import time
     filename = './predictions/'+str(int(time.time()))+'.png'
     plt.axis('off')
     plt.savefig(filename, bbox_inches='tight')
