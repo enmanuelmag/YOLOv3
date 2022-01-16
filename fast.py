@@ -76,7 +76,7 @@ def predict(image_tensor, image):
   class_labels = config.USD_DIVISA_CLASSES
   nboxes = time.time()
   nms_boxes = non_max_suppression(
-    bboxes[0], iou_threshold=0.85, threshold=0.55
+    bboxes[0], iou_threshold=0.85, threshold=0.73
   )
   nboxes = time.time()
   print(f"NMS time: {nboxes - nboxes:.6f}")
