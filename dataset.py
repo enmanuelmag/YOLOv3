@@ -20,14 +20,14 @@ from utils import (
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class YOLODataset(Dataset):
-    def __init__(self, csv_file, img_dir, label_dir, anchors, image_size=416, S=[13, 26, 52], C=20, transform=None):
+    def __init__(self, csv_file, img_dir, label_dir, anchors, image_size=416, S=[26, 52, 104], C=20, transform=None):
         self.annotations = pd.read_csv(csv_file)
         self.img_dir = img_dir
         self.label_dir = label_dir
         self.image_size = image_size
         self.transform = transform
         self.S = S
-        self.anchors = torch.tensor(anchors[0] + anchors[1] + anchors[2])  # for all 3 scales
+        self.anchors = torch.tensor(anchors[1] + anchors[2] + anchors[3])  # for all 3 scales
         self.num_anchors = self.anchors.shape[0]
         self.num_anchors_per_scale = self.num_anchors // 3
         self.C = C
@@ -57,7 +57,7 @@ class YOLODataset(Dataset):
             iou_anchors = iou(torch.tensor(box[2:4]), self.anchors)
             anchor_indices = iou_anchors.argsort(descending=True, dim=0)
             x, y, width, height, class_label = box
-            has_anchor = [False, False, False]  # each scale should have one anchor
+            has_anchor = [False, False, False, False]  # each scale should have one anchor
             for anchor_idx in anchor_indices:
                 scale_idx = anchor_idx // self.num_anchors_per_scale
                 anchor_on_scale = anchor_idx % self.num_anchors_per_scale

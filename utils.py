@@ -487,7 +487,7 @@ def get_loaders(train_csv_path, test_csv_path):
     train_dataset = YOLODataset(
         train_csv_path,
         transform=config.train_transforms,
-        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8],
+        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8, IMAGE_SIZE // 4],
         img_dir=config.IMG_DIR,
         label_dir=config.LABEL_DIR,
         anchors=config.ANCHORS,
@@ -495,7 +495,7 @@ def get_loaders(train_csv_path, test_csv_path):
     test_dataset = YOLODataset(
         test_csv_path,
         transform=config.test_transforms,
-        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8],
+        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8, IMAGE_SIZE // 4],
         img_dir=config.IMG_DIR,
         label_dir=config.LABEL_DIR,
         anchors=config.ANCHORS,
@@ -520,7 +520,7 @@ def get_loaders(train_csv_path, test_csv_path):
     train_eval_dataset = YOLODataset(
         train_csv_path,
         transform=config.test_transforms,
-        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8],
+        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8, IMAGE_SIZE // 4],
         img_dir=config.IMG_DIR,
         label_dir=config.LABEL_DIR,
         anchors=config.ANCHORS,

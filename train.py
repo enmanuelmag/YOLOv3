@@ -37,14 +37,20 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, ep
     losses = []
     for batch_idx, (x, y) in enumerate(loop):
         x = x.to(config.DEVICE)
-        y0, y1, y2 = (
+        y0, y1, y2, y3 = (
             y[0].to(config.DEVICE),
             y[1].to(config.DEVICE),
             y[2].to(config.DEVICE),
+            y[3].to(config.DEVICE),
         )
 
         with torch.cuda.amp.autocast():
             out = model(x)
+            """ loss = (
+                loss_fn(out[1], y1, scaled_anchors[1])
+                + loss_fn(out[2], y2, scaled_anchors[2])
+                + loss_fn(out[3], y3, scaled_anchors[3])
+            ) """
             loss = (
                 loss_fn(out[0], y0, scaled_anchors[0])
                 + loss_fn(out[1], y1, scaled_anchors[1])
@@ -65,8 +71,8 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, ep
 
 def main():
     current_time = 'logs'
-    path_looses = f"./loss/{current_time}_all_looses.rebuild.pkl"
-    path_metrics = f"./loss/{current_time}_all_metrics.rebuild.pkl"
+    path_looses = f"./loss/{current_time}_all_looses.own.pkl"
+    path_metrics = f"./loss/{current_time}_all_metrics.own.pkl"
     model = YOLOv3(num_classes=config.NUM_CLASSES).to(config.DEVICE)
     optimizer = optim.Adam(
         model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
@@ -96,8 +102,8 @@ def main():
     else:
         metrics_accur = []
     
-    if os.path.exists('last_mapval.txt'):
-        with open('last_mapval.txt', 'r') as f:
+    if os.path.exists('last_mapval.own.txt'):
+        with open('last_mapval.own.txt', 'r') as f:
             last_mapval = float(f.readline())
     else:
         last_mapval = -1
@@ -108,7 +114,7 @@ def main():
         looses = train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, epoch)
         looses = np.array(looses)
         all_looses.append({ 'epoch': epoch, 'looses': looses, 'mean': np.mean(looses), 'std': np.std(looses) })
-        save_checkpoint(model, optimizer, filename='checkpoint.last.model.rebuild.pth.tar')
+        save_checkpoint(model, optimizer, filename='checkpoint.last.model.own.pth.tar')
         if epoch > 0 and (epoch % 3 == 0 or epoch >= config.NUM_EPOCHS):
             if os.path.exists(path_looses):
                 os.remove(path_looses)
@@ -143,7 +149,7 @@ def main():
 
             if mapval > last_mapval:
                 last_mapval = mapval
-                with open(f"last_mapval.txt", "w") as f:
+                with open(f"last_mapval.own.txt", "w") as f:
                     f.write(f"{mapval}")
                 save_checkpoint(model, optimizer, filename=config.CHECKPOINT_FILE)
 

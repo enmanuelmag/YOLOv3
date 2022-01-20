@@ -55,6 +55,12 @@ config_layers = [
   (128, 1, 1),
   (256, 3, 1),
   types.get('S'),
+  #NEW LAYER OWN
+  (64, 1, 1),
+  types.get('U'),
+  (64, 1, 1),
+  (128, 3, 1),
+  types.get('S'),
   #End scale predictions
 ]
 
@@ -145,6 +151,8 @@ class YOLOv3(nn.Module):
 
       x = layer(x)
 
+      if isinstance(layer, ResidualBlock) and layer.repeats == 2:
+        routes_cons.append(x)
       if isinstance(layer, ResidualBlock) and layer.repeats == 8:
         routes_cons.append(x)
       
@@ -212,10 +220,12 @@ if __name__ == "__main__":
   x.to(device)
   start = time.time()
   out = model(x)
+  print(out[3].shape)
   print(f'Time: {time.time() - start}')
 
-  assert model(x)[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
-  assert model(x)[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
-  assert model(x)[2].shape == (2, 3, IMAGE_SIZE//8, IMAGE_SIZE//8, num_classes + 5)
+  assert out[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
+  assert out[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
+  assert out[2].shape == (2, 3, IMAGE_SIZE//8, IMAGE_SIZE//8, num_classes + 5)
+  assert out[3].shape == (2, 3, IMAGE_SIZE//4, IMAGE_SIZE//4, num_classes + 5)
 
   print("All done without errors")
