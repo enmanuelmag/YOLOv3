@@ -64,9 +64,16 @@ class YoloLoss(nn.Module):
       (predictions[..., 5:][obj]), (target[..., 5][obj].long()),
     )
 
-    return (
+    a1 = torch.mul(self.lambda_box, box_loss)
+    a2 = torch.mul(self.lambda_obj, object_loss)
+    a3 = torch.mul(self.lambda_noobj, no_object_loss)
+    a4 = torch.mul(self.lambda_class, class_loss)
+
+    return torch.add(torch.add(torch.add(a1, a2), a3), a4)
+
+    """ return (
       self.lambda_box * box_loss
       + self.lambda_obj * object_loss
       + self.lambda_noobj * no_object_loss
       + self.lambda_class * class_loss
-    )
+    ) """

@@ -328,7 +328,7 @@ def get_evaluation_bboxes(
     all_pred_boxes = []
     all_true_boxes = []
     for batch_idx, (x, labels) in enumerate(tqdm(loader)):
-        x = x.to(device)
+        x = x.to(config.DEVICE)
 
         with torch.no_grad():
             predictions = model(x)
@@ -337,7 +337,7 @@ def get_evaluation_bboxes(
         bboxes = [[] for _ in range(batch_size)]
         for i in range(3):
             S = predictions[i].shape[2]
-            anchor = torch.tensor([*anchors[i]]).to(device) * S
+            anchor = torch.tensor([*anchors[i]]).to(config.DEVICE) * S
             boxes_scale_i = cells_to_bboxes(
                 predictions[i], anchor, S=S, is_preds=True
             )
@@ -386,7 +386,7 @@ def cells_to_bboxes(predictions, anchors, S, is_preds=True):
     """
     BATCH_SIZE = predictions.shape[0]
     num_anchors = len(anchors)
-    box_predictions = predictions[..., 1:5]
+    box_predictions = predictions[..., 1:5].to(config.DEVICE)
     if is_preds:
         anchors = anchors.reshape(1, len(anchors), 1, 1, 2)
         box_predictions[..., 0:2] = torch.sigmoid(box_predictions[..., 0:2])
@@ -396,14 +396,18 @@ def cells_to_bboxes(predictions, anchors, S, is_preds=True):
     else:
         scores = predictions[..., 0:1]
         best_class = predictions[..., 5:6]
-
-    cell_indices = (
-        torch.arange(S)
-        .repeat(predictions.shape[0], 3, S, 1)
-        .unsqueeze(-1)
-        .to(predictions.device)
+    best_class = best_class.to(config.DEVICE)
+    scores = scores.to(config.DEVICE)
+    cell_indices = \
+        torch.arange(S)\
+        .repeat(predictions.shape[0], 3, S, 1)\
+        .unsqueeze(-1)\
+        .to(config.DEVICE)
+    #box_predictions = box_predictions.to(config.DEVICE)
+    x = 1 / S * \
+    (
+        box_predictions[..., 0:1] + cell_indices
     )
-    x = 1 / S * (box_predictions[..., 0:1] + cell_indices)
     y = 1 / S * (box_predictions[..., 1:2] + cell_indices.permute(0, 1, 3, 2, 4))
     w_h = 1 / S * box_predictions[..., 2:4]
     converted_bboxes = torch.cat((best_class, scores, x, y, w_h), dim=-1).reshape(BATCH_SIZE, num_anchors * S * S, 6)
@@ -540,7 +544,7 @@ def get_loaders(train_csv_path, test_csv_path):
 def plot_couple_examples(model, loader, thresh, iou_thresh, anchors):
     model.eval()
     x, y = next(iter(loader))
-    x = x.to('cuda:0')
+    x = x.to(config.DEVICE)
     with torch.no_grad():
         out = model(x)
         bboxes = [[] for _ in range(x.shape[0])]

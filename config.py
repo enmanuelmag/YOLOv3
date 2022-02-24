@@ -32,6 +32,8 @@ ANCHORS = [
     [(0.02, 0.03), (0.04, 0.07), (0.08, 0.06)],
 ]  # Note these have been rescaled to be between [0, 1]
 
+#send ANCHORS to DEVICE
+#ANCHORS = [torch.tensor(a).to(DEVICE) for a in ANCHORS]
 
 scale = 1.1
 train_transforms = A.Compose(

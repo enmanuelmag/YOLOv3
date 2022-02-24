@@ -29,7 +29,7 @@ notifier = Notifier(
   api_token='1878628343:AAEFVRsqDz63ycmaLOFS7gvsG969wdAsJ0w'
 )
 
-torch.backends.cudnn.benchmark = True
+#torch.backends.cudnn.benchmark = True
 
 
 def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors, epoch=0):
@@ -109,7 +109,7 @@ def main():
         looses = np.array(looses)
         all_looses.append({ 'epoch': epoch, 'looses': looses, 'mean': np.mean(looses), 'std': np.std(looses) })
         save_checkpoint(model, optimizer, filename='checkpoint.last.model.rebuild.pth.tar')
-        if epoch > 0 and (epoch % 3 == 0 or epoch >= config.NUM_EPOCHS):
+        if epoch > 0: # and (epoch % 3 == 0 or epoch >= config.NUM_EPOCHS)
             if os.path.exists(path_looses):
                 os.remove(path_looses)
             pkl.dump(all_looses, open(path_looses, "wb"))
@@ -152,6 +152,12 @@ def main():
 
 
 if __name__ == "__main__":
+    if torch.cuda.is_available():
+        print('CUDA is available!')
+        #get name of GPU
+        print(torch.cuda.get_device_name(0))
+    else:  
+        print('CUDA is not available!')
     start_time = time.time()
     date_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))
     notifier(title='Start training YOLOv3', msg=f'Traning started at {date_start}')

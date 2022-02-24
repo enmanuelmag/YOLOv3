@@ -113,7 +113,7 @@ def test():
             )[0]
         boxes = nms(boxes, iou_threshold=1, threshold=0.7, box_format="midpoint")
         print(boxes)
-        plot_image(x[0].permute(1, 2, 0).to("cpu"), boxes)
+        plot_image(x[0].permute(1, 2, 0).to(config.DEVICE), boxes)
 
 
 if __name__ == "__main__":

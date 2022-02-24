@@ -3,20 +3,6 @@ import torch
 import torch.nn as nn
 
 
-
-if torch.cuda.is_available():
-  torch.cuda.empty_cache()
-  torch.cuda.set_device(0)
-
-
-if torch.cuda.is_available():
-  print('CUDA is available!')
-  dev = "cuda:0" 
-else:  
-  print('CUDA is not available!')
-  dev = "cpu"  
-device = torch.device(dev) 
-
 types = { 'U': 'UPSAMPLING', 'B': 'BLOCK_CONVS', 'S': 'SKIP_PREDICTIONS' }
 """
 This list has the config for the DarkNet35 layers and Scale predictions layers:
@@ -100,8 +86,8 @@ class ResidualBlock(nn.Module):
 
   def forward(self, x):
     for layer in self.layers:
-      x = layer(x) + x if self.residual else layer(x)
-
+      #x = layer(x) + x if self.residual else layer(x)
+      x = torch.add(x, layer(x)) if self.residual else layer(x)
     return x
 
 
@@ -209,13 +195,27 @@ if __name__ == "__main__":
   num_classes = 6
   IMAGE_SIZE = 416
 
-  model = YOLOv3(num_classes=num_classes)
-  model = model.cuda()
-  x = torch.randn((2, 3, IMAGE_SIZE, IMAGE_SIZE))
-  x = x.cuda()
-  start = time.time()
-  out = model(x)
-  print(f'Time: {time.time() - start}')
+  if torch.cuda.is_available():
+    print('CUDA is available!')
+    #get name of GPU
+    print(torch.cuda.get_device_name(0))
+    #get number of GPU
+    print(torch.cuda.device_count())
+    #set GPU
+    dev = torch.device("cuda:0")
+    #dev = "cuda:0" 
+  else:  
+    print('CUDA is not available!')
+    dev = "cpu" 
+  device = dev
+
+  with torch.cuda.amp.autocast():
+    model = YOLOv3(num_classes=num_classes).to(device)
+    for _ in range(100):
+      x = torch.randn((2, 3, IMAGE_SIZE, IMAGE_SIZE)).to(device)
+      start = time.time()
+      out = model(x)
+      print(f'Time: {time.time() - start}')
 
   assert out[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
   assert out[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
