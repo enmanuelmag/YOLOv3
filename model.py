@@ -3,14 +3,17 @@ import torch
 import torch.nn as nn
 
 
+
 if torch.cuda.is_available():
   torch.cuda.empty_cache()
   torch.cuda.set_device(0)
 
 
-if torch.cuda.is_available():  
+if torch.cuda.is_available():
+  print('CUDA is available!')
   dev = "cuda:0" 
 else:  
+  print('CUDA is not available!')
   dev = "cpu"  
 device = torch.device(dev) 
 
@@ -207,15 +210,15 @@ if __name__ == "__main__":
   IMAGE_SIZE = 416
 
   model = YOLOv3(num_classes=num_classes)
-  model
+  model = model.cuda()
   x = torch.randn((2, 3, IMAGE_SIZE, IMAGE_SIZE))
-  x.to(device)
+  x = x.cuda()
   start = time.time()
   out = model(x)
   print(f'Time: {time.time() - start}')
 
-  assert model(x)[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
-  assert model(x)[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
-  assert model(x)[2].shape == (2, 3, IMAGE_SIZE//8, IMAGE_SIZE//8, num_classes + 5)
+  assert out[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5)
+  assert out[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
+  assert out[2].shape == (2, 3, IMAGE_SIZE//8, IMAGE_SIZE//8, num_classes + 5)
 
   print("All done without errors")

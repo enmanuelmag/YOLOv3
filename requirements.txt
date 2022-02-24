@@ -1,10 +1,10 @@
 albumentations==1.1.0
 fastapi==0.71.0
-matplotlib==3.5.1
+matplotlib
 notifier==1.0.3
-notify_function==1.4.0
-numpy==1.21.2
+notify_function
+numpy
 opencv_python_headless==4.5.5.62
-pandas==1.3.5
-Pillow==9.0.0
+pandas
+Pillow
 tqdm==4.62.3
